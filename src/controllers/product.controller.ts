@@ -10,7 +10,27 @@ export async function getMenu(req: Request, res: Response) {
   /* #swagger.tags = ['Products']
   #swagger.summary = 'Lista todos los productos del menú' */
   try {
-    const products = await getAllProducts();
+    const maxPrice = req.query.maxPrice
+      ? Number(req.query.maxPrice)
+      : undefined;
+
+    if (maxPrice !== undefined && isNaN(maxPrice)) {
+      return res.status(400).json({ error: "maxPrice debe ser un número" });
+    }
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+
+    if (
+      !Number.isInteger(page) ||
+      page < 1 ||
+      !Number.isInteger(limit) ||
+      limit < 1
+    ) {
+      return res
+        .status(400)
+        .json({ error: "page y limit deben ser números enteros mayores a 0" });
+    }
+    const products = await getAllProducts(maxPrice, page, limit);
     res.json(products);
   } catch (error) {
     console.error("[GET /api/menu]", error);
